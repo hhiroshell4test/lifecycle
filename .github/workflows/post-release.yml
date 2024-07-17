@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      contents: read
+      packages: write
+      attestations: write
     steps:
       - uses: actions/checkout@v4
       - name: Setup go
@@ -24,31 +27,32 @@ jobs:
         uses: sigstore/cosign-installer@v3
       - uses: azure/docker-login@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          login-server: ghcr.io
+          username: hhiroshell4test
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set env
         run: |
           echo "LIFECYCLE_VERSION=$(echo ${{ github.event.release.tag_name }} | cut -d "v" -f2)" >> $GITHUB_ENV
           echo "LIFECYCLE_IMAGE_TAG=$(git describe --always --abbrev=7)" >> $GITHUB_ENV
       - name: Verify lifecycle images
         run: |
-          LINUX_AMD64_SHA=$(cosign verify --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/build.yml" --certificate-oidc-issuer https://token.actions.githubusercontent.com buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-x86-64 | jq -r .[0].critical.image.\"docker-manifest-digest\")
+          LINUX_AMD64_SHA=$(cosign verify --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/build.yml" --certificate-oidc-issuer https://token.actions.githubusercontent.com ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-x86-64 | jq -r .[0].critical.image.\"docker-manifest-digest\")
           echo "LINUX_AMD64_SHA: $LINUX_AMD64_SHA"
           echo "LINUX_AMD64_SHA=$LINUX_AMD64_SHA" >> $GITHUB_ENV
 
-          LINUX_ARM64_SHA=$(cosign verify --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/build.yml" --certificate-oidc-issuer https://token.actions.githubusercontent.com buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-arm64 | jq -r .[0].critical.image.\"docker-manifest-digest\")
+          LINUX_ARM64_SHA=$(cosign verify --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/build.yml" --certificate-oidc-issuer https://token.actions.githubusercontent.com ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-arm64 | jq -r .[0].critical.image.\"docker-manifest-digest\")
           echo "LINUX_ARM64_SHA: $LINUX_ARM64_SHA"
           echo "LINUX_ARM64_SHA=$LINUX_ARM64_SHA" >> $GITHUB_ENV
 
-          LINUX_PPC64LE_SHA=$(cosign verify --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/build.yml" --certificate-oidc-issuer https://token.actions.githubusercontent.com buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-ppc64le | jq -r .[0].critical.image.\"docker-manifest-digest\")
+          LINUX_PPC64LE_SHA=$(cosign verify --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/build.yml" --certificate-oidc-issuer https://token.actions.githubusercontent.com ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-ppc64le | jq -r .[0].critical.image.\"docker-manifest-digest\")
           echo "LINUX_PPC64LE_SHA: $LINUX_PPC64LE_SHA"
           echo "LINUX_PPC64LE_SHA=$LINUX_PPC64LE_SHA" >> $GITHUB_ENV
 
-          LINUX_S390X_SHA=$(cosign verify --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/build.yml" --certificate-oidc-issuer https://token.actions.githubusercontent.com buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-s390x | jq -r .[0].critical.image.\"docker-manifest-digest\")
+          LINUX_S390X_SHA=$(cosign verify --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/build.yml" --certificate-oidc-issuer https://token.actions.githubusercontent.com ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-s390x | jq -r .[0].critical.image.\"docker-manifest-digest\")
           echo "LINUX_S390X_SHA: $LINUX_S390X_SHA"
           echo "LINUX_S390X_SHA=$LINUX_S390X_SHA" >> $GITHUB_ENV
 
-          WINDOWS_AMD64_SHA=$(cosign verify --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/build.yml" --certificate-oidc-issuer https://token.actions.githubusercontent.com buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows | jq -r .[0].critical.image.\"docker-manifest-digest\")
+          WINDOWS_AMD64_SHA=$(cosign verify --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/build.yml" --certificate-oidc-issuer https://token.actions.githubusercontent.com ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows | jq -r .[0].critical.image.\"docker-manifest-digest\")
           echo "WINDOWS_AMD64_SHA: $WINDOWS_AMD64_SHA"
           echo "WINDOWS_AMD64_SHA=$WINDOWS_AMD64_SHA" >> $GITHUB_ENV
       - name: Download SBOM
@@ -60,76 +64,76 @@ jobs:
         run: |
           DOCKER_CLI_EXPERIMENTAL=enabled
 
-          crane tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-x86-64@${{ env.LINUX_AMD64_SHA }} ${{ env.LIFECYCLE_VERSION }}-linux-x86-64
-          crane tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-arm64@${{ env.LINUX_ARM64_SHA }} ${{ env.LIFECYCLE_VERSION }}-linux-arm64
-          crane tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-ppc64le@${{ env.LINUX_PPC64LE_SHA }} ${{ env.LIFECYCLE_VERSION }}-linux-ppc64le
-          crane tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-s390x@${{ env.LINUX_S390X_SHA }} ${{ env.LIFECYCLE_VERSION }}-linux-s390x
-          crane tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows@${{ env.WINDOWS_AMD64_SHA }} ${{ env.LIFECYCLE_VERSION }}-windows
+          crane tag ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-x86-64@${{ env.LINUX_AMD64_SHA }} ${{ env.LIFECYCLE_VERSION }}-linux-x86-64
+          crane tag ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-arm64@${{ env.LINUX_ARM64_SHA }} ${{ env.LIFECYCLE_VERSION }}-linux-arm64
+          crane tag ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-ppc64le@${{ env.LINUX_PPC64LE_SHA }} ${{ env.LIFECYCLE_VERSION }}-linux-ppc64le
+          crane tag ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-s390x@${{ env.LINUX_S390X_SHA }} ${{ env.LIFECYCLE_VERSION }}-linux-s390x
+          crane tag ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows@${{ env.WINDOWS_AMD64_SHA }} ${{ env.LIFECYCLE_VERSION }}-windows
 
-          docker manifest create buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }} \
-            buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux-x86-64@${{ env.LINUX_AMD64_SHA }} \
-            buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux-arm64@${{ env.LINUX_ARM64_SHA }} \
-            buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux-ppc64le@${{ env.LINUX_PPC64LE_SHA }} \
-            buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux-s390x@${{ env.LINUX_S390X_SHA }} \
-            buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}-windows@${{ env.WINDOWS_AMD64_SHA }}
+          docker manifest create ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_VERSION }} \
+            ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux-x86-64@${{ env.LINUX_AMD64_SHA }} \
+            ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux-arm64@${{ env.LINUX_ARM64_SHA }} \
+            ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux-ppc64le@${{ env.LINUX_PPC64LE_SHA }} \
+            ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_VERSION }}-linux-s390x@${{ env.LINUX_S390X_SHA }} \
+            ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_VERSION }}-windows@${{ env.WINDOWS_AMD64_SHA }}
 
-          MANIFEST_SHA=$(docker manifest push buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }})
+          MANIFEST_SHA=$(docker manifest push ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_VERSION }})
           echo "MANIFEST_SHA: $MANIFEST_SHA"
 
           cosign sign -r -y \
             -a tag=${{ env.LIFECYCLE_VERSION }} \
-            buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}@${MANIFEST_SHA}
+            ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_VERSION }}@${MANIFEST_SHA}
           cosign verify \
             --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/post-release.yml" \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
             -a tag=${{ env.LIFECYCLE_VERSION }} \
-            buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}
+            ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_VERSION }}
 
-          cosign attach sbom --sbom ./*-bom.cdx.json --type cyclonedx buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}
+          cosign attach sbom --sbom ./*-bom.cdx.json --type cyclonedx ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_VERSION }}
           cosign sign -r -y \
             -a tag=${{ env.LIFECYCLE_VERSION }} --attachment sbom \
-            buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}@${MANIFEST_SHA}
+            ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_VERSION }}@${MANIFEST_SHA}
           cosign verify \
             --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/post-release.yml" \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
             -a tag=${{ env.LIFECYCLE_VERSION }} --attachment sbom \
-            buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}
+            ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_VERSION }}
       - name: Retag lifecycle images & create manifest list - latest
         if: "!contains(env.LIFECYCLE_VERSION, 'rc') && !contains(env.LIFECYCLE_VERSION, 'pre')"
         run: |
           DOCKER_CLI_EXPERIMENTAL=enabled
 
-          crane tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-x86-64@${{ env.LINUX_AMD64_SHA }} latest-linux-x86-64
-          crane tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-arm64@${{ env.LINUX_ARM64_SHA }} latest-linux-arm64
-          crane tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-ppc64le@${{ env.LINUX_PPC64LE_SHA }} latest-linux-ppc64le
-          crane tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-s390x@${{ env.LINUX_S390X_SHA }} latest-linux-s390x
-          crane tag buildpacksio/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows@${{ env.WINDOWS_AMD64_SHA }} latest-windows
+          crane tag ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-x86-64@${{ env.LINUX_AMD64_SHA }} latest-linux-x86-64
+          crane tag ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-arm64@${{ env.LINUX_ARM64_SHA }} latest-linux-arm64
+          crane tag ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-ppc64le@${{ env.LINUX_PPC64LE_SHA }} latest-linux-ppc64le
+          crane tag ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-linux-s390x@${{ env.LINUX_S390X_SHA }} latest-linux-s390x
+          crane tag ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_IMAGE_TAG }}-windows@${{ env.WINDOWS_AMD64_SHA }} latest-windows
 
-          docker manifest create buildpacksio/lifecycle:latest \
-            buildpacksio/lifecycle:latest-linux-x86-64@${{ env.LINUX_AMD64_SHA }} \
-            buildpacksio/lifecycle:latest-linux-arm64@${{ env.LINUX_ARM64_SHA }} \
-            buildpacksio/lifecycle:latest-linux-ppc64le@${{ env.LINUX_PPC64LE_SHA }} \
-            buildpacksio/lifecycle:latest-linux-s390x@${{ env.LINUX_S390X_SHA }} \
-            buildpacksio/lifecycle:latest-windows@${{ env.WINDOWS_AMD64_SHA }}
+          docker manifest create ghcr.io/hhiroshell4test/lifecycle:latest \
+            ghcr.io/hhiroshell4test/lifecycle:latest-linux-x86-64@${{ env.LINUX_AMD64_SHA }} \
+            ghcr.io/hhiroshell4test/lifecycle:latest-linux-arm64@${{ env.LINUX_ARM64_SHA }} \
+            ghcr.io/hhiroshell4test/lifecycle:latest-linux-ppc64le@${{ env.LINUX_PPC64LE_SHA }} \
+            ghcr.io/hhiroshell4test/lifecycle:latest-linux-s390x@${{ env.LINUX_S390X_SHA }} \
+            ghcr.io/hhiroshell4test/lifecycle:latest-windows@${{ env.WINDOWS_AMD64_SHA }}
 
-          MANIFEST_SHA=$(docker manifest push buildpacksio/lifecycle:latest)
+          MANIFEST_SHA=$(docker manifest push ghcr.io/hhiroshell4test/lifecycle:latest)
           echo "MANIFEST_SHA: $MANIFEST_SHA"
 
           cosign sign -r -y \
             -a tag=latest \
-            buildpacksio/lifecycle:latest@${MANIFEST_SHA}
+            ghcr.io/hhiroshell4test/lifecycle:latest@${MANIFEST_SHA}
           cosign verify \
             --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/post-release.yml" \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
             -a tag=latest \
-            buildpacksio/lifecycle:latest
+            ghcr.io/hhiroshell4test/lifecycle:latest
 
-          cosign attach sbom --sbom ./*-bom.cdx.json --type cyclonedx buildpacksio/lifecycle:latest
+          cosign attach sbom --sbom ./*-bom.cdx.json --type cyclonedx ghcr.io/hhiroshell4test/lifecycle:latest
           cosign sign -r -y \
             -a tag=${{ env.LIFECYCLE_VERSION }} --attachment sbom \
-            buildpacksio/lifecycle:latest@${MANIFEST_SHA}
+            ghcr.io/hhiroshell4test/lifecycle:latest@${MANIFEST_SHA}
           cosign verify \
             --certificate-identity-regexp "https://github.com/${{ github.repository_owner }}/lifecycle/.github/workflows/post-release.yml" \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
             -a tag=${{ env.LIFECYCLE_VERSION }} --attachment sbom \
-            buildpacksio/lifecycle:latest
+            ghcr.io/hhiroshell4test/lifecycle:latest

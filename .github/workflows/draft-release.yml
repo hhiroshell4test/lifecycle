@@ -155,7 +155,7 @@ jobs:
 
           ## Lifecycle Image
 
-          An OCI image containing the lifecycle binaries is available at buildpacksio/lifecycle:${{ env.LIFECYCLE_VERSION }}.
+          An OCI image containing the lifecycle binaries is available at ghcr.io/hhiroshell4test/lifecycle:${{ env.LIFECYCLE_VERSION }}.
 
           ## Features
 
